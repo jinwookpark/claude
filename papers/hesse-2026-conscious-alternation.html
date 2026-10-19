@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>의식의 시분할</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@600;700;900&display=swap">
+<style>
+/* Layout: 760px 읽기 칼럼 하나, 그림도 같은 폭. 주황 = 보이는 얼굴(상태 1), 보라 = 억제된 얼굴(상태 2)을 모든 그림에서 고정한다. */
+:root{
+  --bg:#F6F6F9; --surface:#FFFFFF; --sunk:#EDECF2; --ink:#17151F; --ink-2:#47435A; --ink-3:#6B667E; --line:#DEDCE7;
+  --s1:#D9730D; --s2:#6A4BB0; --on-s1:#17151F; --on-s2:#FFFFFF;
+  --s1-wash:rgba(217,115,13,.14); --s2-wash:rgba(106,75,176,.13);
+  --neutral-mark:#8E8AA2;
+  --good:#2E7A4C; --mid:#8F6000; --bad:#B3383A;
+  --good-wash:rgba(46,122,76,.12); --mid-wash:rgba(143,96,0,.12); --bad-wash:rgba(179,56,58,.10);
+  --font-display:"Noto Serif KR","Nanum Myeongjo","AppleMyungjo",serif;
+  --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111016; --surface:#1A1922; --sunk:#23222C; --ink:#EDEBF3; --ink-2:#C2BDD1; --ink-3:#948EA6; --line:#312F3C;
+    --s1:#C96E12; --s2:#8F72D9; --on-s1:#14121A; --on-s2:#14121A;
+    --s1-wash:rgba(232,140,50,.17); --s2-wash:rgba(160,135,230,.17);
+    --neutral-mark:#77728A;
+    --good:#62BE8A; --mid:#DDA846; --bad:#E57A7A;
+    --good-wash:rgba(98,190,138,.13); --mid-wash:rgba(221,168,70,.13); --bad-wash:rgba(229,122,122,.12);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111016; --surface:#1A1922; --sunk:#23222C; --ink:#EDEBF3; --ink-2:#C2BDD1; --ink-3:#948EA6; --line:#312F3C;
+  --s1:#C96E12; --s2:#8F72D9; --on-s1:#14121A; --on-s2:#14121A;
+  --s1-wash:rgba(232,140,50,.17); --s2-wash:rgba(160,135,230,.17);
+  --neutral-mark:#77728A;
+  --good:#62BE8A; --mid:#DDA846; --bad:#E57A7A;
+  --good-wash:rgba(98,190,138,.13); --mid-wash:rgba(221,168,70,.13); --bad-wash:rgba(229,122,122,.12);
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.75 var(--font-body);word-break:keep-all;overflow-wrap:break-word;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.wrap{width:100%;max-width:792px;margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--s2);text-underline-offset:3px;text-decoration-thickness:1.5px}
+a:hover{text-decoration-thickness:2.5px}
+:focus-visible{outline:2px solid var(--s2);outline-offset:2px;border-radius:4px}
+b,strong{font-weight:600}
+p{margin:0 0 14px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--ink-3)}
+sup{font-size:.7em;line-height:0}
+
+/* nav */
+.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.toc-inner{display:flex;gap:6px;overflow-x:auto;padding-block:10px;scrollbar-width:none}
+.toc-inner::-webkit-scrollbar{display:none}
+.toc a{flex:none;font-size:13.5px;line-height:1.4;padding:5px 12px;border-radius:999px;color:var(--ink-2);text-decoration:none;border:1px solid var(--line);background:var(--surface)}
+.toc a.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* hero */
+.hero{padding-block:40px 8px}
+.eyebrow{font:500 12px/1.5 var(--font-mono);letter-spacing:.04em;color:var(--ink-3);margin:0 0 14px}
+h1{font-family:var(--font-display);font-weight:900;font-size:clamp(2.7rem,11vw,4.3rem);line-height:1.08;letter-spacing:-.02em;margin:0 0 18px;text-wrap:balance}
+.dek{font-size:1.13rem;line-height:1.75;color:var(--ink-2);max-width:36em;margin:0}
+.hl1{box-shadow:inset 0 -.42em 0 var(--s1-wash);color:var(--ink);font-weight:600}
+.hl2{box-shadow:inset 0 -.42em 0 var(--s2-wash);color:var(--ink);font-weight:600}
+
+.lanes{display:grid;gap:10px;margin:0}
+.lane{display:grid;grid-template-columns:8.4rem minmax(0,1fr);align-items:center;gap:14px}
+.lane-label{font-size:13.5px;line-height:1.4;color:var(--ink);font-weight:600}
+.lane-label small{display:block;font-weight:400;color:var(--ink-3);font-size:12px;margin-top:2px}
+.track{position:relative;height:34px;border-radius:6px;overflow:hidden;background:var(--sunk)}
+.track.tall{height:40px}
+.seg{position:absolute;top:0;bottom:0;display:block}
+.seg.s1{background:var(--s1)} .seg.s2{background:var(--s2)}
+.blk{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;white-space:nowrap}
+.blk.s1{background:var(--s1);color:var(--on-s1)} .blk.s2{background:var(--s2);color:var(--on-s2)}
+.blk.empty{color:var(--ink-3);font-weight:500}
+.flick{position:absolute;inset:0 auto 0 0;width:200%;animation:slide 26s linear infinite}
+@keyframes slide{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion: reduce){.flick{animation:none}}
+.flash-line{position:absolute;top:-4px;bottom:-4px;left:50%;width:2px;margin-left:-1px;background:var(--ink);z-index:2}
+@media (max-width:540px){
+  .lane{grid-template-columns:1fr;gap:5px}
+  .lane-label small{display:inline;margin-left:6px}
+}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--ink-2);margin:12px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
+.sw.s1{background:var(--s1)} .sw.s2{background:var(--s2)} .sw.nm{background:var(--neutral-mark)}
+figure{margin:28px 0}
+figcaption{font-size:13px;line-height:1.6;color:var(--ink-3);margin-top:12px}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:30px 0 22px}
+.stat{background:var(--surface);padding:14px 14px 16px;min-width:0}
+.stat .n{font:600 1.5rem/1.2 var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink)}
+.stat .l{font-size:13px;color:var(--ink-2);line-height:1.5;margin-top:6px}
+@media (max-width:660px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.paper{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:16px 18px;font-size:14px;line-height:1.65;color:var(--ink-2)}
+.paper .t{font-weight:600;color:var(--ink);font-size:15px;line-height:1.5;word-break:normal;margin:0 0 6px}
+.paper p{margin:0 0 6px}
+.paper p:last-child{margin:0}
+
+/* sections */
+section{padding-block:52px 4px;scroll-margin-top:58px}
+h2{font-family:var(--font-display);font-weight:700;font-size:clamp(1.55rem,5vw,2rem);line-height:1.3;letter-spacing:-.01em;margin:0 0 18px;text-wrap:balance}
+h3{font-size:1.1rem;font-weight:700;line-height:1.45;margin:0 0 8px;text-wrap:balance}
+h4{font-size:13px;font-weight:600;color:var(--ink-3);margin:0 0 4px;letter-spacing:.02em}
+.lead{font-size:1.04rem;color:var(--ink-2)}
+
+.takeaways{list-style:none;margin:0 0 26px;padding:0;display:grid;gap:18px;counter-reset:tk}
+.takeaways li{display:grid;grid-template-columns:2.2rem minmax(0,1fr);gap:8px;counter-increment:tk}
+.takeaways li::before{content:counter(tk);font:700 1.6rem/1.15 var(--font-display);color:var(--ink-3)}
+.judge{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.judge>div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.judge p{margin:8px 0 0;font-size:14.5px;line-height:1.65;color:var(--ink-2)}
+@media (max-width:600px){.judge{grid-template-columns:1fr}}
+
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;line-height:1.5;padding:2px 10px;border-radius:999px;white-space:nowrap}
+.pill.good{background:var(--good-wash);color:var(--good)}
+.pill.mid{background:var(--mid-wash);color:var(--mid)}
+.pill.bad{background:var(--bad-wash);color:var(--bad)}
+.pill.hyp{background:var(--sunk);color:var(--ink-2)}
+
+.versus{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0 22px}
+.versus>div{border-top:2px solid var(--ink);padding-top:10px;min-width:0}
+.versus h4{color:var(--ink);font-size:14px;margin-bottom:6px}
+.versus p{font-size:14.5px;line-height:1.65;color:var(--ink-2);margin:0}
+@media (max-width:560px){.versus{grid-template-columns:1fr}}
+
+.specs{display:grid;grid-template-columns:8.6rem minmax(0,1fr);border-top:1px solid var(--line);margin:22px 0}
+.specs dt,.specs dd{padding:10px 0;border-bottom:1px solid var(--line);margin:0;font-size:14.5px;line-height:1.6}
+.specs dt{color:var(--ink-3);font-weight:500;padding-right:12px}
+.specs dd{color:var(--ink)}
+@media (max-width:520px){.specs{grid-template-columns:1fr}.specs dt{border-bottom:0;padding-bottom:0}.specs dd{padding-top:2px}}
+
+.box{background:var(--sunk);border-radius:10px;padding:16px 18px;margin:22px 0}
+.box h3{font-size:1rem;margin-bottom:6px}
+.box p{font-size:14.5px;line-height:1.7;color:var(--ink-2)}
+.box p:last-child{margin:0}
+
+.axis{position:relative;height:30px;margin-top:6px}
+.axis span{position:absolute;top:0;transform:translateX(-50%);font:500 11.5px/1.3 var(--font-mono);color:var(--ink-3);white-space:nowrap}
+.axis span.l{transform:none} .axis span.r{transform:translateX(-100%)}
+.win-mark{position:absolute;top:19px;height:4px;border-radius:2px;background:var(--ink-3)}
+
+/* findings */
+.finding{padding-block:22px 6px;border-top:1px solid var(--line)}
+.finding:first-of-type{border-top:0;padding-top:4px}
+.fidx{font:600 12px/1.4 var(--font-mono);color:var(--ink-3);letter-spacing:.04em;margin-bottom:6px}
+.stat-inline{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:.94em;white-space:nowrap}
+
+/* charts */
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 16px 12px;margin:20px 0 10px}
+.chart-title{font-size:14px;font-weight:600;margin:0 0 2px}
+.chart-sub{font-size:12.5px;color:var(--ink-3);margin:0 0 10px;line-height:1.5}
+.chart svg{display:block;width:100%;max-width:520px;height:auto;margin:0 auto}
+.chart svg text{font-family:var(--font-body);font-size:11px;fill:var(--ink-2)}
+.chart svg .tick{fill:var(--ink-3);font-family:var(--font-mono);font-size:10.5px}
+.chart svg .grid{stroke:var(--line);stroke-width:1}
+.chart svg .chance{stroke:var(--ink-3);stroke-width:1}
+.chart svg .ln1{stroke:var(--s1);stroke-width:2;fill:none;stroke-linejoin:round;stroke-linecap:round}
+.chart svg .ln2{stroke:var(--s2);stroke-width:2;fill:none;stroke-linejoin:round;stroke-linecap:round}
+.chart svg .m1{fill:var(--s1);stroke:var(--surface);stroke-width:2}
+.chart svg .m2{fill:var(--s2);stroke:var(--surface);stroke-width:2}
+.chart svg .m1h{fill:var(--surface);stroke:var(--s1);stroke-width:2}
+.chart svg .m2h{fill:var(--surface);stroke:var(--s2);stroke-width:2}
+.chart svg .hit{fill:transparent;stroke:none}
+.chart svg .pt{cursor:default;outline:none}
+.chart svg .pt:focus-visible .hit{stroke:var(--ink);stroke-width:1.5}
+.chart svg .strong{fill:var(--ink);font-weight:600}
+.ckey{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;color:var(--ink-2);margin:0 0 6px}
+.ckey span{display:inline-flex;align-items:center;gap:6px}
+.ckey svg{width:26px;height:12px;flex:none;display:inline-block;margin:0}
+
+.mpanels{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media (max-width:640px){.mpanels{grid-template-columns:1fr}}
+.mhead{font-size:13px;font-weight:600;margin:0 0 6px;color:var(--ink)}
+.mrows{display:grid;grid-template-columns:6.6rem minmax(0,1fr);padding-right:40px}
+.mlabel{font-size:12.5px;line-height:1.35;color:var(--ink-2);display:flex;align-items:center;padding-right:8px;min-height:34px}
+.mtrack{position:relative;min-height:34px}
+.mtrack::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--ink-3)}
+.mtrack::after{content:"";position:absolute;top:0;bottom:0;left:100%;width:1px;background:var(--line)}
+.mtrack .g{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
+.mbar{position:absolute;top:8px;height:18px;display:block}
+.mbar.pos{left:50%;width:calc(var(--v) * 50%);border-radius:0 4px 4px 0}
+.mbar.neg{right:50%;width:calc(var(--v) * -50%);border-radius:4px 0 0 4px}
+.mbar.c1{background:var(--s1)} .mbar.c2{background:var(--s2)} .mbar.cn{background:var(--neutral-mark)}
+.mval{position:absolute;top:8px;line-height:18px;font:600 12px/18px var(--font-mono);color:var(--ink);white-space:nowrap;background:var(--surface);padding:0 3px;margin-left:-3px;z-index:1}
+.mval.pos{left:calc(50% + var(--v) * 50% + 6px)}
+.mval.neg{left:calc(50% + 6px)}
+.mnote{position:absolute;top:8px;left:calc(50% + 8px);font-size:11.5px;line-height:18px;color:var(--ink-3);white-space:nowrap}
+.maxis{position:relative;height:18px;font:500 10.5px/1 var(--font-mono);color:var(--ink-3)}
+.maxis span{position:absolute;top:4px;transform:translateX(-50%)}
+.mref{font-size:11.5px;color:var(--ink-3);margin-top:8px;line-height:1.5}
+
+/* simulator */
+.sim{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;margin:26px 0 12px}
+.sim h3{margin-bottom:4px}
+.sim > p{font-size:14.5px;color:var(--ink-2)}
+.simstrip{position:relative;height:56px;border-radius:6px;overflow:hidden;background:var(--sunk);cursor:pointer;touch-action:pan-y}
+.simwin{position:absolute;top:0;bottom:0;border:2px solid var(--ink);border-radius:5px;box-shadow:0 0 0 999px color-mix(in srgb, var(--surface) 62%, transparent);pointer-events:none}
+.simaxis{display:flex;justify-content:space-between;font:500 11px/1 var(--font-mono);color:var(--ink-3);margin:6px 0 14px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;align-items:end}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+.ctl label{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-2);margin-bottom:4px;gap:8px}
+.ctl label output{font-family:var(--font-mono);color:var(--ink);font-weight:600}
+.ctl input[type=range]{width:100%;accent-color:var(--ink);margin:0}
+.ctl.row{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.chk{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-2);cursor:pointer}
+.chk input{accent-color:var(--ink);width:16px;height:16px;margin:0}
+.btn{font:600 13.5px/1 var(--font-body);color:var(--ink);background:var(--surface);border:1px solid var(--ink);border-radius:999px;padding:9px 16px;cursor:pointer}
+.btn:hover{background:var(--sunk)}
+.readout{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.ro-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;font-size:13.5px;color:var(--ink-2);margin-bottom:10px}
+.ro-top b{font-family:var(--font-mono);color:var(--ink)}
+.mix{position:relative;height:14px;border-radius:7px;background:linear-gradient(90deg,var(--s2),var(--sunk) 50%,var(--s1))}
+.mix i{position:absolute;top:-6px;width:4px;height:26px;margin-left:-2px;border-radius:2px;background:var(--ink);box-shadow:0 0 0 2px var(--surface);transition:left .25s ease}
+@media (prefers-reduced-motion: reduce){.mix i{transition:none}}
+.mixends{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);margin-top:6px}
+.verdict{margin:12px 0 0;font-size:14.5px;line-height:1.65;color:var(--ink);min-height:3.2em}
+
+/* tables */
+.tbl{position:relative;overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin:18px 0}
+table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.55}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+tr:last-child td{border-bottom:0}
+thead th{font-size:12.5px;color:var(--ink-3);font-weight:600;background:var(--sunk);white-space:nowrap}
+.tbl.matrix table{min-width:560px}
+.matrix td.c,.matrix th.c{text-align:center}
+.yes{color:var(--good);font-weight:700}
+.no{color:var(--bad);font-weight:700}
+@media (max-width:620px){
+  .stack thead{display:none}
+  .stack tr{display:block;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .stack tr:last-child{border-bottom:0}
+  .stack td{display:block;border:0;padding:3px 0}
+  .stack td[data-label]::before{content:attr(data-label);display:block;font-size:12px;font-weight:600;color:var(--ink-3)}
+  .stack td:first-child{font-weight:600}
+}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.controls-list{list-style:none;margin:18px 0;padding:0;border-top:1px solid var(--line)}
+.controls-list li{display:grid;grid-template-columns:9.5rem minmax(0,1fr);gap:4px 14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.6}
+.controls-list .nm{font-weight:600;color:var(--ink)}
+.controls-list .nm small{display:block;font-weight:400;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+.controls-list .rs{color:var(--ink-2)}
+@media (max-width:540px){.controls-list li{grid-template-columns:1fr}}
+
+/* critique */
+.crit{padding-block:24px 8px;border-top:1px solid var(--line)}
+.crit-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin-bottom:8px}
+.crit-h h3{margin:0}
+.badge{font:600 11.5px/1.5 var(--font-body);padding:1px 8px;border-radius:4px;white-space:nowrap;flex:none}
+.badge.core{background:var(--ink);color:var(--bg)}
+.badge.minor{border:1px solid var(--line);color:var(--ink-2);background:var(--surface)}
+.crit-sub{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 6px}
+.crit-sub>div{background:var(--sunk);border-radius:8px;padding:12px 14px;min-width:0}
+.crit-sub p{font-size:14px;line-height:1.65;color:var(--ink-2);margin:0}
+@media (max-width:600px){.crit-sub{grid-template-columns:1fr}}
+
+/* insights */
+.ins{padding-block:26px 10px;border-top:1px solid var(--line)}
+.ins h3{font-family:var(--font-display);font-size:1.28rem;font-weight:700;line-height:1.4;margin-bottom:10px}
+.sowhat{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:baseline;border-left:2px solid var(--ink);padding:2px 0 2px 14px;margin:6px 0 10px}
+.sowhat span{font:600 12px/1.6 var(--font-mono);color:var(--ink-3);white-space:nowrap}
+.sowhat p{margin:0;font-size:15px;line-height:1.7;color:var(--ink)}
+
+/* glossary */
+.terms{display:grid;grid-template-columns:1fr 1fr;gap:0 28px;margin:10px 0}
+.terms div{padding:12px 0;border-bottom:1px solid var(--line);min-width:0}
+.terms dt{font-weight:600;font-size:14.5px}
+.terms dt span{font-weight:400;color:var(--ink-3);font-size:12.5px;margin-left:4px}
+.terms dd{margin:2px 0 0;font-size:14px;line-height:1.65;color:var(--ink-2)}
+@media (max-width:620px){.terms{grid-template-columns:1fr}}
+
+footer{margin-top:56px;border-top:1px solid var(--line);padding-block:24px 48px;font-size:13px;line-height:1.7;color:var(--ink-3)}
+footer p{margin:0 0 8px}
+footer a{color:var(--ink-2)}
+
+/* tooltip */
+.tip{position:fixed;z-index:40;max-width:260px;background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.5;padding:7px 10px;border-radius:6px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+</style>
+
+<nav class="toc" aria-label="목차">
+  <div class="wrap toc-inner" id="toc">
+    <a href="#summary">요약</a>
+    <a href="#background">배경</a>
+    <a href="#design">실험</a>
+    <a href="#findings">발견</a>
+    <a href="#checks">검증</a>
+    <a href="#critique">반박</a>
+    <a href="#verdict">판정</a>
+    <a href="#insight">통찰</a>
+    <a href="#next">다음 실험</a>
+    <a href="#terms">용어</a>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <p class="eyebrow">논문 해설 · bioRxiv 프리프린트 · 동료 심사 전</p>
+  <h1>의식의 시분할</h1>
+  <p class="dek">두 눈에 서로 다른 얼굴을 보여 주면 하나만 보인다. 그런데 원숭이의 측두엽과 전전두엽 뉴런 집단은 그동안에도 <span class="hl1">보이는 얼굴</span>과 <span class="hl2">보이지 않는 얼굴</span>을 약 60 ms씩 번갈아 표현하고 있었다.</p>
+
+  <figure aria-label="지각은 안정적이지만 뉴런 표상은 깜빡인다">
+    <div class="lanes">
+      <div class="lane">
+        <div class="lane-label">지각<small>섬광 얼굴만 계속 보인다</small></div>
+        <div class="track"><span class="blk s1" style="left:0;width:100%">보이는 얼굴</span></div>
+      </div>
+      <div class="lane">
+        <div class="lane-label">IT 뉴런 집단<small>10 ms마다 판정한 표상</small></div>
+        <div class="track tall"><div class="flick" id="heroFlick"></div></div>
+      </div>
+    </div>
+    <div class="legend"><span><i class="sw s1"></i>보이는 얼굴 표상 (상태 1)</span><span><i class="sw s2"></i>억제된 얼굴 표상 (상태 2)</span></div>
+    <figcaption>섬광 후 구간의 모식도. 아래 줄은 논문 수치(평균 체류 약 60 ms, 점유 반반)로 만든 예시 시퀀스이며 실제 기록이 아니다.</figcaption>
+  </figure>
+
+  <div class="stats">
+    <div class="stat"><div class="n">~60 ms</div><div class="l">한 표상이 유지되는 시간 (중앙값)</div></div>
+    <div class="stat"><div class="n">초당 ~15회</div><div class="l">표상 전환. 지각 전환(약 0.5 Hz)보다 30배 빠름</div></div>
+    <div class="stat"><div class="n">61% : 4%</div><div class="l">상태 1 구간의 얼굴 해독률, 보이는 얼굴 대 억제된 얼굴 (우연 10%)</div></div>
+    <div class="stat"><div class="n">1.21배</div><div class="l">보이는 얼굴 쪽 튜닝 게인 우위</div></div>
+  </div>
+
+  <div class="paper">
+    <p class="t">Rapid alternation of conscious and suppressed stimulus representations in the primate brain</p>
+    <p>Janis K. Hesse, Frank F. Lanfranchi, Conor McGrory, Yuelin Shi, Tatiana A. Engel, Doris Y. Tsao</p>
+    <p>UC 버클리 · 프린스턴 · 칼텍 · HHMI &nbsp;|&nbsp; bioRxiv 2026년 10월 16일 게시 &nbsp;|&nbsp; <a href="https://doi.org/10.64898/2026.10.15.759299">doi.org/10.64898/2026.10.15.759299</a></p>
+  </div>
+</header>
+
+<main>
+<section id="summary" class="wrap">
+  <h2>한눈에 보기</h2>
+  <ol class="takeaways">
+    <li><div><b>오래된 수수께끼.</b> 양안 경쟁 중 뉴런의 평균 반응은 '보이는 그림'을 약하게만 따른다. 그래서 뇌 어디에서도 의식된 지각만 깨끗하게 담은 신호를 찾지 못했다.</div></li>
+    <li><div><b>시간을 쪼개자 풀렸다.</b> 10 ms 단위로 보니 집단 활동은 보이는 얼굴만 담은 순간과 억제된 얼굴만 담은 순간을 약 60 ms마다 오갔다. 평균이 약했던 이유는 두 순간이 섞였기 때문이다.</div></li>
+    <li><div><b>같은 뉴런, 다른 시간.</b> 두 표상은 같은 뉴런이 같은 코드로 만든다. 차이는 보이는 얼굴 쪽 튜닝이 약 21% 더 가파르다는 정도다. 저자들은 의식 접근에는 '어디'만이 아니라 '언제'의 선택이 필요하다고 결론짓는다.</div></li>
+  </ol>
+  <div class="judge">
+    <div><span class="pill good">● 관찰은 탄탄</span><p>같은 뉴런 집단이 두 얼굴 표상을 수십 ms 단위로 오간다는 점은 뉴런 반분 교차검증과 대안 모형 비교로 잘 뒷받침된다.</p></div>
+    <div><span class="pill bad">○ 해석은 열려 있음</span><p>그 교대가 '의식과 무의식의 교대'라는 해석은 아직 열려 있다. 원숭이의 보고가 없고, 점유율이 반반이며, 적응 효과가 섞여 있고, 두 얼굴이 모두 보이는 대조 조건이 없다.</p></div>
+  </div>
+</section>
+
+<section id="background" class="wrap">
+  <h2>무엇이 수수께끼였나</h2>
+  <p>어떤 순간이든 뇌 활동의 일부만 의식에 오른다. 저자들은 "왜 그것이 느껴지는가"라는 어려운 문제는 제쳐 두고, 의식에 접근 가능한 활동과 그렇지 않은 활동을 무엇이 가르는지 묻는다.</p>
+  <p>이 질문에는 물리 자극은 그대로이고 지각만 바뀌는 상황이 필요하다. 대표적인 것이 <b>양안 경쟁</b>이다. 두 눈에 다른 그림을 보여 주면 둘 다 망막에 들어오는데도 하나만 보인다. <b>양안 섬광 억제</b>는 이것을 실험자가 조절할 수 있게 만든 변형이다. 한 눈에 그림을 먼저 보여 준 뒤 다른 눈에 새 그림을 갑자기 띄우면, 새 그림이 보이고 먼저 것은 의식에서 사라진다.</p>
+  <p>수십 년간의 기록 결과는 애매했다. 얼굴을 선호하는 뉴런은 얼굴이 '보일 때' 더 많이 발화하지만, 그 차이는 얼굴과 집을 따로 보여 줄 때보다 훨씬 작다. 억제된 그림의 정보도 뉴런에 남아 있다. 이 공백 때문에 의식이 뇌의 앞쪽에 있느냐 뒤쪽에 있느냐는 논쟁이 이어졌다.</p>
+  <div class="versus">
+    <div><h4>앞쪽 (전전두엽)</h4><p>전역 작업공간 이론, 고차 이론. 정보가 전전두엽을 포함한 넓은 네트워크로 전파되거나 고차 표상이 생길 때 의식이 된다.</p></div>
+    <div><h4>뒤쪽 (후방 감각 피질)</h4><p>통합 정보 이론, 재귀 처리 이론. 감각 피질 안의 통합되고 재귀적인 활동 자체가 의식이다.</p></div>
+  </div>
+  <p>2025년 COGITATE 대립 협업도 이 예측들을 정면으로 시험했지만 결정적인 위치는 나오지 않았다. 이 논문은 질문을 바꾼다. <b>같은 뉴런 집단 안에서, 시간에 따라 무엇이 표현되는가.</b></p>
+</section>
+
+<section id="design" class="wrap">
+  <h2>실험은 이렇게 했다</h2>
+  <p class="lead">얼굴 A를 한 눈에 먼저 보여 주고, 다른 눈에 얼굴 B를 섬광처럼 띄운다. 사람은 B를 보고, 원숭이의 뇌에서는 수백 개 뉴런을 동시에 기록한다.</p>
+
+  <figure aria-label="양안 섬광 억제 실험 모식도">
+    <div class="lanes">
+      <div class="lane">
+        <div class="lane-label">왼눈</div>
+        <div class="track"><span class="blk s2" style="left:0;width:100%">얼굴 A (프라이밍, 계속 제시)</span><i class="flash-line"></i></div>
+      </div>
+      <div class="lane">
+        <div class="lane-label">오른눈</div>
+        <div class="track"><span class="blk empty" style="left:0;width:50%">빈 화면</span><span class="blk s1" style="left:calc(50% + 1px);width:calc(50% - 1px)">얼굴 B (섬광)</span><i class="flash-line"></i></div>
+      </div>
+      <div class="lane">
+        <div class="lane-label">지각<small>사람 보고</small></div>
+        <div class="track"><span class="blk s2" style="left:0;width:calc(50% - 1px)">A가 보임</span><span class="blk s1" style="left:calc(50% + 1px);width:calc(50% - 1px)">B가 보임</span><i class="flash-line"></i></div>
+      </div>
+      <div class="lane">
+        <div class="lane-label">IT 집단 표상<small>이 논문의 발견</small></div>
+        <div class="track tall" id="schemIT"><i class="flash-line"></i></div>
+      </div>
+      <div class="lane">
+        <div></div>
+        <div class="axis" aria-hidden="true">
+          <span class="l" style="left:0">−1 s</span>
+          <span style="left:50%">0 섬광</span>
+          <span class="r" style="left:100%">+1 s</span>
+          <i class="win-mark" style="left:65%;width:35%"></i>
+        </div>
+      </div>
+    </div>
+    <figcaption>회색 막대는 분석 구간(섬광 후 300–1000 ms). 섬광 전에도 약 25%의 구간이 다른 얼굴 상태로 분류된다(논문 그림 2c). 어느 눈에 무엇을 먼저 보여 줄지는 시행마다 바꿨다. IT 줄은 논문 수치로 만든 예시다.</figcaption>
+  </figure>
+
+  <dl class="specs">
+    <dt>피험 동물</dt><dd>붉은털원숭이 2마리(A, M). 화면 중앙을 응시만 하고 지각은 보고하지 않았다(no-report).</dd>
+    <dt>사람 검증</dt><dd>14명이 버튼으로 보고. 섬광 그림을 본다는 보고가 경쟁 시행의 82%, 한 그림만 보여 줬을 때 정답률은 87% (p = 4×10<sup>−7</sup>).</dd>
+    <dt>기록 부위</dt><dd>하측두피질(IT)의 얼굴 패치 ML·AM, 전전두엽의 얼굴 반응 영역 PO·PVL. fMRI로 위치를 잡았다.</dd>
+    <dt>장비</dt><dd>영장류용 Neuropixels 탐침. 탐침 하나로 수백 개 뉴런을 동시에 기록해 단일 시행 안의 변화를 볼 수 있다.</dd>
+    <dt>규모</dt><dd>19 세션, IT 시각 반응 뉴런 3,501개, 전전두엽 뉴런 661개.</dd>
+    <dt>자극</dt><dd>원숭이 얼굴 1,500장(750쌍, 프라이밍 1초)과 별도의 10개 얼굴 실험(25쌍, 프라이밍 2초). 적청 입체 안경으로 두 눈에 다른 영상을 보냈다.</dd>
+  </dl>
+
+  <div class="box">
+    <h3>분석의 핵심 아이디어</h3>
+    <p>각 얼굴을 단독으로 보여 줬을 때 뉴런별 평균 발화율을 그 얼굴의 '지문(템플릿)'으로 삼는다. 경쟁 중 10 ms마다 관측된 스파이크가 어느 지문에서 나왔을 확률이 더 높은지 비교해(포아송 로그우도비) <b>상태 1</b>(보이는 얼굴 지문) 또는 <b>상태 2</b>(억제된 얼굴 지문)로 표시한다. 이어 은닉 마르코프 모형(HMM)으로 상태가 얼마나 오래 유지되는지 추정한다.</p>
+    <p>얼굴 세포는 얼굴 특징 공간의 축을 따라 선형으로 반응한다(Chang &amp; Tsao, 2017). 그래서 단독 제시 반응으로 학습한 회귀식을 각 상태의 활동에 적용하면, 그 순간 뇌가 표현하던 얼굴을 이미지로 재구성할 수 있다.</p>
+  </div>
+</section>
+
+<section id="findings" class="wrap">
+  <h2>핵심 발견</h2>
+  <p class="lead">발견은 하나의 논증으로 이어진다. 평균이 약하다는 관찰에서 출발해, 시간 분해로 그 이유를 설명하고, 전전두엽까지 넓힌다.</p>
+
+  <article class="finding">
+    <div class="fidx">발견 1</div>
+    <h3>평균으로 보면 '보이는 얼굴' 신호는 약하다</h3>
+    <p>두 얼굴을 따로 보여 줄 때 뉴런이 보이는 선호 차이를 기준(1.0)으로 하면, 경쟁 중 차이는 그 23% 수준이었다(기울기 0.23, 세포-자극 쌍 5,550개, <span class="stat-inline">p = 8×10<sup>−133</sup></span>). 한 얼굴은 분명히 보이고 다른 얼굴은 전혀 안 보이는데, 뉴런은 둘을 겨우 구분한다. 기존 연구들과 같은 결과다.</p>
+  </article>
+
+  <article class="finding">
+    <div class="fidx">발견 2</div>
+    <h3>시간을 쪼개면 두 상태가 빠르게 번갈아 나타난다</h3>
+    <p>섬광 전에는 대부분의 구간이 프라이밍 얼굴 상태로 분류된다. 섬광 후에는 상태 1과 상태 2가 거의 반씩 차지한다. 상태 신호의 자기상관은 시간상수 67 ms로 줄었고, 시간 순서를 섞은 대조군에서는 한 구간 안에 사라졌다. HMM으로 추정한 체류 시간 중앙값은 상태 1이 64 ms, 상태 2가 59 ms였다.</p>
+    <p>초당 약 15번 바뀌는 셈이다. 사람이 양안 경쟁에서 지각 전환을 겪는 속도(약 0.5 Hz)보다 30배 이상 빠르다.</p>
+  </article>
+
+  <article class="finding">
+    <div class="fidx">발견 3</div>
+    <h3>각 상태의 활동에서 해당 얼굴이 되살아난다</h3>
+    <p>상태 1 구간의 평균 활동은 보이는 얼굴을, 상태 2 구간은 억제된 얼굴을 재구성했다. 보이는 얼굴의 일부 특징은 설명분산 80%를 넘어, 단독 제시로 얻는 상한(90% 이상)에 근접했다. 반대로 상태를 나누지 않고 전체를 평균하면 두 얼굴의 중간쯤 되는 얼굴이 나온다.</p>
+    <p>10개 얼굴로 한 별도 실험에서는 단일 시행 해독도 같은 패턴을 보였다.</p>
+
+    <div class="chart">
+      <p class="chart-title">단일 시행 얼굴 해독 정확도</p>
+      <p class="chart-sub">10개 얼굴 중 하나를 맞히는 문제, 10 세션 평균. 속이 빈 표시는 본문에 수치가 없어 그림 2l에서 읽은 근사치.</p>
+      <div class="ckey">
+        <span><svg viewBox="0 0 26 12" aria-hidden="true"><line x1="1" y1="6" x2="25" y2="6" style="stroke:var(--s1);stroke-width:2"/><circle cx="13" cy="6" r="4" style="fill:var(--s1)"/></svg>보이는 얼굴을 맞힌 비율</span>
+        <span><svg viewBox="0 0 26 12" aria-hidden="true"><line x1="1" y1="6" x2="25" y2="6" style="stroke:var(--s2);stroke-width:2"/><rect x="9" y="2" width="8" height="8" style="fill:var(--s2)"/></svg>억제된 얼굴을 맞힌 비율</span>
+      </div>
+      <svg viewBox="0 0 360 232" role="img" aria-labelledby="decT decD">
+        <title id="decT">상태별 단일 시행 해독 정확도</title>
+        <desc id="decD">전체 평균에서는 보이는 얼굴 40%, 억제된 얼굴 34%. 상태 1 구간에서는 61% 대 4%. 상태 2 구간에서는 약 5% 대 약 60%로 뒤집힌다. 우연 수준은 10%.</desc>
+        <line class="grid" x1="36" y1="200" x2="268" y2="200"/>
+        <line class="grid" x1="36" y1="146.9" x2="268" y2="146.9"/>
+        <line class="grid" x1="36" y1="93.7" x2="268" y2="93.7"/>
+        <line class="grid" x1="36" y1="40.6" x2="268" y2="40.6"/>
+        <text class="tick" x="30" y="203.5" text-anchor="end">0</text>
+        <text class="tick" x="30" y="150.4" text-anchor="end">20</text>
+        <text class="tick" x="30" y="97.2" text-anchor="end">40</text>
+        <text class="tick" x="30" y="44.1" text-anchor="end">60%</text>
+        <line class="chance" x1="36" y1="173.4" x2="268" y2="173.4"/>
+        <text class="tick" x="40" y="168.5">우연 수준 10%</text>
+        <polyline class="ln1" points="74.7,93.7 152,37.9 229.3,186.7"/>
+        <polyline class="ln2" points="74.7,109.7 152,189.4 229.3,40.6"/>
+        <g class="pt" tabindex="0" data-tip="전체 평균 · 보이는 얼굴 40%"><circle class="hit" cx="74.7" cy="93.7" r="12"/><circle class="m1" cx="74.7" cy="93.7" r="5"/></g>
+        <g class="pt" tabindex="0" data-tip="전체 평균 · 억제된 얼굴 34%"><circle class="hit" cx="74.7" cy="109.7" r="12"/><rect class="m2" x="69.7" y="104.7" width="10" height="10"/></g>
+        <g class="pt" tabindex="0" data-tip="상태 1 구간 · 보이는 얼굴 61% (p = 2×10⁻⁶)"><circle class="hit" cx="152" cy="37.9" r="12"/><circle class="m1" cx="152" cy="37.9" r="5"/></g>
+        <g class="pt" tabindex="0" data-tip="상태 1 구간 · 억제된 얼굴 4%"><circle class="hit" cx="152" cy="189.4" r="12"/><rect class="m2" x="147" y="184.4" width="10" height="10"/></g>
+        <g class="pt" tabindex="0" data-tip="상태 2 구간 · 보이는 얼굴 ≈5% (그림 판독, p = 3×10⁻⁷)"><circle class="hit" cx="229.3" cy="186.7" r="12"/><circle class="m1h" cx="229.3" cy="186.7" r="4.5"/></g>
+        <g class="pt" tabindex="0" data-tip="상태 2 구간 · 억제된 얼굴 ≈60% (그림 판독)"><circle class="hit" cx="229.3" cy="40.6" r="12"/><rect class="m2h" x="224.8" y="36.1" width="9" height="9"/></g>
+        <text x="64" y="90" text-anchor="end">40%</text>
+        <text x="64" y="117" text-anchor="end">34%</text>
+        <text class="strong" x="152" y="26" text-anchor="middle">61%</text>
+        <text x="162" y="197">4%</text>
+        <text x="242" y="44.5">억제된 얼굴 ≈60%</text>
+        <text x="242" y="190.5">보이는 얼굴 ≈5%</text>
+        <text x="74.7" y="222" text-anchor="middle">전체 평균</text>
+        <text x="152" y="222" text-anchor="middle">상태 1 구간</text>
+        <text x="229.3" y="222" text-anchor="middle">상태 2 구간</text>
+      </svg>
+    </div>
+  </article>
+
+  <article class="finding">
+    <div class="fidx">발견 4</div>
+    <h3>같은 뉴런이 시간에 따라 역할을 바꾼다</h3>
+    <p>'보이는 얼굴 전담 뉴런'과 '억제된 얼굴 전담 뉴런'이 따로 있는 게 아니다. 한 세포가 상태 1에서는 보이는 얼굴의 특징 축을 따라 반응이 비례해 커지고, 상태 2에서는 억제된 얼굴의 축을 따른다. 두 상태의 튜닝 게인은 세포 간 상관이 r = 0.90이었다(543개 세포).</p>
+    <p>차이도 있다. 보이는 얼굴 쪽 튜닝이 평균 1.21배 가파르고(<span class="stat-inline">p = 3×10<sup>−40</sup></span>), 평균 발화율은 오히려 상태 2에서 약간 높다. 이 차이만으로 선형 해독기가 상태 1과 2를 66% 정확도로 구분했다(우연 50%). 저자들은 이것이 '의식으로 갈 표상'을 표시하는 신호일 수 있다고 본다.</p>
+  </article>
+
+  <article class="finding">
+    <div class="fidx">발견 5</div>
+    <h3>그래서 평균이 약했다</h3>
+    <p>상태 1 구간만 보면 경쟁 중 선호 차이는 단독 제시와 거의 같고(기울기 0.93), 상태 2 구간은 반대 방향이다(−0.76). 두 상태를 섞으면 서로 상쇄되어 약해진다. 남아 있던 약간의 양의 변조는 게인 비대칭 때문이었다. 두 상태의 게인을 맞춘 뒤 점유율로 가중 평균하면 기울기 0.07, 상관 r = −0.02(p = 0.31)로 사라진다.</p>
+
+    <div class="chart">
+      <p class="chart-title">경쟁 중 선호 차이 ÷ 단독 제시 선호 차이 (기울기)</p>
+      <p class="chart-sub">1이면 단독 제시와 똑같이 구분, 0이면 구분 못 함, 음수면 반대 얼굴을 선호하는 것처럼 반응.</p>
+      <div class="mpanels">
+        <div>
+          <p class="mhead">하측두피질 (IT)</p>
+          <div class="mrows">
+            <div class="mlabel">전체 시간 평균</div>
+            <div class="mtrack"><i class="g" style="left:0"></i><i class="g" style="left:25%"></i><i class="g" style="left:75%"></i><span class="mbar pos cn" style="--v:.23" tabindex="0" data-tip="IT 전체 평균 · 기울기 0.23 · 5,550 쌍 (그림 1h)"></span><span class="mval pos" style="--v:.23">0.23</span></div>
+            <div class="mlabel">상태 1 구간만</div>
+            <div class="mtrack"><i class="g" style="left:0"></i><i class="g" style="left:25%"></i><i class="g" style="left:75%"></i><span class="mbar pos c1" style="--v:.93" tabindex="0" data-tip="IT 상태 1 · 기울기 0.93 · r = 0.66 · 2,885 쌍"></span><span class="mval pos" style="--v:.93">0.93</span></div>
+            <div class="mlabel">상태 2 구간만</div>
+            <div class="mtrack"><i class="g" style="left:0"></i><i class="g" style="left:25%"></i><i class="g" style="left:75%"></i><span class="mbar neg c2" style="--v:-.76" tabindex="0" data-tip="IT 상태 2 · 기울기 −0.76 · r = −0.44"></span><span class="mval neg">−0.76</span></div>
+            <div class="mlabel">게인 보정 후 평균</div>
+            <div class="mtrack"><i class="g" style="left:0"></i><i class="g" style="left:25%"></i><i class="g" style="left:75%"></i><span class="mbar pos cn" style="--v:.07" tabindex="0" data-tip="IT 게인 보정 후 · 기울기 0.07 · r = −0.02, p = 0.31"></span><span class="mval pos" style="--v:.07">0.07</span></div>
+            <div></div>
+            <div class="maxis" aria-hidden="true"><span style="left:0">−1</span><span style="left:25%">−0.5</span><span style="left:50%">0</span><span style="left:75%">0.5</span><span style="left:100%">1</span></div>
+          </div>
+        </div>
+        <div>
+          <p class="mhead">전전두엽 (PO·PVL)</p>
+          <div class="mrows">
+            <div class="mlabel">전체 시간 평균</div>
+            <div class="mtrack"><i class="g" style="left:0"></i><i class="g" style="left:25%"></i><i class="g" style="left:75%"></i><span class="mbar pos cn" style="--v:.32" tabindex="0" data-tip="전전두엽 전체 평균 · 기울기 0.32 · 283 쌍"></span><span class="mval pos" style="--v:.32">0.32</span></div>
+            <div class="mlabel">상태 1 구간만</div>
+            <div class="mtrack"><i class="g" style="left:0"></i><i class="g" style="left:25%"></i><i class="g" style="left:75%"></i><span class="mbar pos c1" style="--v:.91" tabindex="0" data-tip="전전두엽 상태 1 · 기울기 0.91 · r = 0.63"></span><span class="mval pos" style="--v:.91">0.91</span></div>
+            <div class="mlabel">상태 2 구간만</div>
+            <div class="mtrack"><i class="g" style="left:0"></i><i class="g" style="left:25%"></i><i class="g" style="left:75%"></i><span class="mbar neg c2" style="--v:-.52" tabindex="0" data-tip="전전두엽 상태 2 · 기울기 −0.52 · r = −0.32"></span><span class="mval neg">−0.52</span></div>
+            <div class="mlabel">게인 보정 후 평균</div>
+            <div class="mtrack"><i class="g" style="left:0"></i><i class="g" style="left:25%"></i><i class="g" style="left:75%"></i><span class="mnote">기울기 미보고 · r = 0.24</span></div>
+            <div></div>
+            <div class="maxis" aria-hidden="true"><span style="left:0">−1</span><span style="left:25%">−0.5</span><span style="left:50%">0</span><span style="left:75%">0.5</span><span style="left:100%">1</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="mref">IT '전체 시간 평균'은 그림 1h(5,550 쌍), 나머지 IT 값은 뉴런 반분 교차검증을 거친 그림 4g(2,885 쌍). 전전두엽은 그림 6f.</p>
+    </div>
+
+    <div class="sim" id="sim">
+      <h3>직접 해 보기: 평균의 함정</h3>
+      <p>아래 줄은 1초 동안의 IT 상태를 흉내 낸 것이다(평균 체류 60 ms, 점유 반반). 하류 영역이 일정 길이의 창으로 IT 활동을 평균해서 읽는다고 해 보자. 창을 늘리면 무엇이 읽히는지 보자. 줄을 탭하면 창 위치가 바뀐다.</p>
+      <div class="simstrip" id="simStrip" aria-label="1초 동안의 상태 시퀀스"><div id="simSegs"></div><div class="simwin" id="simWin"></div></div>
+      <div class="simaxis" aria-hidden="true"><span>0 ms</span><span>500</span><span>1000 ms</span></div>
+      <div class="controls">
+        <div class="ctl"><label for="winLen">읽기 창 길이 <output id="winLenOut">300 ms</output></label><input type="range" id="winLen" min="10" max="600" step="10" value="300"></div>
+        <div class="ctl"><label for="winPos">창 위치 <output id="winPosOut">500 ms</output></label><input type="range" id="winPos" min="0" max="1000" step="5" value="500"></div>
+        <div class="ctl row">
+          <label class="chk" for="gainOn"><input type="checkbox" id="gainOn" checked>보이는 얼굴 게인 1.21배 반영</label>
+          <button class="btn" type="button" id="reseed">새 시퀀스</button>
+        </div>
+      </div>
+      <div class="readout" aria-live="polite">
+        <div class="ro-top"><span>창 안 상태 1 비율 <b id="fracOut">–</b></span><span>이 시퀀스 전체 상태 1 비율 <b id="allOut">–</b></span></div>
+        <div class="mix" aria-hidden="true"><i id="mixMark" style="left:50%"></i></div>
+        <div class="mixends"><span>억제된 얼굴</span><span>두 얼굴의 평균</span><span>보이는 얼굴</span></div>
+        <p class="verdict" id="verdict"></p>
+      </div>
+      <figcaption>개념 시뮬레이션. 논문 수치(체류 60 ms, 점유 50:50, 게인 1.21)만 사용했고 실제 스파이크 데이터가 아니다.</figcaption>
+    </div>
+  </article>
+
+  <article class="finding">
+    <div class="fidx">발견 6</div>
+    <h3>전전두엽도 같은 구조를 보인다</h3>
+    <p>PO·PVL에서도 상태 1은 보이는 얼굴을, 상태 2는 억제된 얼굴을 재구성했고, 뉴런 반분 교차검증에서도 유지됐다(<span class="stat-inline">p = 3×10<sup>−4</sup></span>). 다만 재구성 품질은 IT보다 낮았다. 단독 제시 상한이 80% 미만이었고 형태 특징은 30%에도 못 미쳤다. 전두엽에도 '평균적으로 순수한' 의식 신호는 없었다. 저자들은 시간 다중화가 피질 전반의 현상일 수 있다고 본다.</p>
+  </article>
+
+  <article class="finding">
+    <div class="fidx">발견 7</div>
+    <h3>얼굴 패치 사이의 동기화는 약하다</h3>
+    <p>ML에서 추론한 상태로 AM의 얼굴을 재구성하거나 그 반대로 해도 분리는 통계적으로 유의했다(ML→AM <span class="stat-inline">p = 3×10<sup>−4</sup></span>, AM→ML <span class="stat-inline">p = 9×10<sup>−6</sup></span>). 하지만 설명분산이 낮았고, 저자들도 패치들이 함께 전환한다는 강한 증거는 아니라고 정리한다. 각 영역이 자기 시계로 교대할 가능성이 남는다.</p>
+  </article>
+</section>
+
+<section id="checks" class="wrap">
+  <h2>가짜 신호가 아님을 보이려는 장치</h2>
+  <p>같은 데이터로 상태를 나누고 그 상태를 다시 평가하면(이중 사용) 노이즈만으로도 그럴듯한 결과가 나온다. 뉴런마다 우연히 튄 발화가 상태 판정과 재구성 양쪽에 동시에 쓰이기 때문이다. 저자들은 이 문제를 스스로 지적하고 다음을 확인했다.</p>
+  <ul class="controls-list">
+    <li><div class="nm">뉴런 반분 교차검증<small>이중 사용 착시를 배제</small></div><div class="rs">절반의 뉴런으로 상태를 정하고 나머지 절반으로 얼굴을 재구성해도 분리가 유지됐다(p = 6×10<sup>−17</sup>). 원숭이별, 세션별로도 유지.</div></li>
+    <li><div class="nm">한 뉴런 빼기<small>뉴런 수 감소 효과를 배제</small></div><div class="rs">반분보다 약 2%p만 나아졌다. 확신이 높은 구간만 쓰면 10%p 나아졌다.</div></li>
+    <li><div class="nm">시행 균형 맞추기<small>시행마다 다른 얼굴이 우세했을 가능성</small></div><div class="rs">각 시행에서 상태 1·2 표본 수를 같게 맞춰도 재구성이 유지됐다. 교대는 시행 사이가 아니라 시행 안에서 일어난다.</div></li>
+    <li><div class="nm">템플릿 뒤섞기<small>분석이 아무 얼굴이나 만들 가능성</small></div><div class="rs">무작위 얼굴로 템플릿을 바꾸면 재구성이 실패했다(설명분산 대부분 0 미만).</div></li>
+    <li><div class="nm">On/Off 4상태 모형<small>전체 흥분성 요동과의 혼동</small></div><div class="rs">흥분성이 높은 시기와 낮은 시기 모두에서 상태 1·2가 반반(49/51, 50/50)이었다. 발화율로 나눈 구분과의 일치도는 κ ≈ 0, 원래 상태 구분과는 80% 일치.</div></li>
+    <li><div class="nm">1상태 대 2상태 우도<small>독립적 노이즈일 가능성</small></div><div class="rs">19개 세션 모두에서 2상태 모형이 정적 1상태 모형보다 잘 맞았다(p = 10<sup>−4</sup>).</div></li>
+  </ul>
+
+  <h3>대안 모형 대결</h3>
+  <p>저자들은 같은 템플릿으로 가짜 데이터를 만드는 네 가지 모형을 시뮬레이션하고, 실제 데이터와 함께 같은 분석 네 가지에 통과시켰다(확장 그림 10a).</p>
+  <div class="tbl matrix">
+    <table>
+      <thead><tr><th>테스트</th><th class="c">실제 데이터</th><th class="c">2상태 교대</th><th class="c">보이는 얼굴만</th><th class="c">고정 평균</th><th class="c">뉴런별 독립 교대</th></tr></thead>
+      <tbody>
+        <tr><td>재구성 (순환 분석)</td><td class="c yes">✓<span class="sr">통과</span></td><td class="c yes">✓<span class="sr">통과</span></td><td class="c no">✗<span class="sr">실패</span></td><td class="c yes">✓<span class="sr">통과</span></td><td class="c yes">✓<span class="sr">통과</span></td></tr>
+        <tr><td>재구성 (뉴런 반분 교차검증)</td><td class="c yes">✓<span class="sr">통과</span></td><td class="c yes">✓<span class="sr">통과</span></td><td class="c no">✗<span class="sr">실패</span></td><td class="c no">✗<span class="sr">실패</span></td><td class="c no">✗<span class="sr">실패</span></td></tr>
+        <tr><td>상태 2의 튜닝 역전</td><td class="c yes">✓<span class="sr">통과</span></td><td class="c yes">✓<span class="sr">통과</span></td><td class="c no">✗<span class="sr">실패</span></td><td class="c no">✗<span class="sr">실패</span></td><td class="c no">✗<span class="sr">실패</span></td></tr>
+        <tr><td>2상태가 1상태보다 잘 맞음</td><td class="c yes">✓<span class="sr">통과</span></td><td class="c yes">✓<span class="sr">통과</span></td><td class="c no">✗<span class="sr">실패</span></td><td class="c no">✗<span class="sr">실패</span></td><td class="c no">✗<span class="sr">실패</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box">
+    <h3>이 표에서 꼭 읽어야 할 한 줄</h3>
+    <p>첫 줄을 보면 상태가 전혀 없는 '고정 평균' 모형도 순환 분석 재구성은 통과한다. 즉 논문 그림 2의 인상적인 얼굴 재구성은 그 자체로는 증거가 아니다. 결정적 증거는 아래 세 줄의 교차검증 테스트이고, 실제 데이터는 이 셋을 모두 통과했다. 또 체류 시간을 맞춘 비교에서 실제 데이터는 평균 모형보다 재구성이 8.2%p 좋았다(p = 0.007).</p>
+  </div>
+</section>
+
+<section id="critique" class="wrap">
+  <h2>반박 관점</h2>
+  <p class="lead">관찰(같은 집단이 두 표상을 오간다)과 해석(그 교대가 의식과 무의식의 교대다)을 나눠서 보자. 관찰은 꽤 탄탄하고, 해석에는 빈틈이 있다. 앞의 네 개가 핵심 쟁점이다.</p>
+
+  <article class="crit">
+    <div class="crit-h"><span class="badge core">핵심 쟁점</span><h3>원숭이는 무엇을 봤는지 말하지 않았다</h3></div>
+    <p>원숭이는 응시만 했고 지각을 보고하지 않았다. '의식된 얼굴'이라는 이름은 사람 14명의 보고에서 빌려 온 것이다. 데이터만 놓고 정확히 이름 붙이면 상태 1은 '나중에 섬광으로 나타난 얼굴의 상태', 상태 2는 '먼저 떠 있던 얼굴의 상태'다. 이름을 이렇게 바꿔도 결과는 하나도 달라지지 않는다. 의식과 연결하는 고리는 데이터 바깥에 있다.</p>
+    <p>사람도 시행의 18%에서는 섬광 그림을 보고하지 않았다. 원숭이에서 어느 시행이 그랬는지는 알 수 없다.</p>
+    <div class="crit-sub">
+      <div><h4>저자 쪽 근거</h4><p>섬광 억제는 원숭이에서도 오래 쓰인 패러다임이다. 보고를 받지 않는 설계는 보고와 운동 준비 신호가 섞이는 문제를 피하는 장점이 있다.</p></div>
+      <div><h4>판가름할 실험</h4><p>원숭이의 시행별 지각(훈련된 보고, 또는 눈 반사 같은 보고 없는 지표)과 상태 점유율·게인의 관계. 특히 섬광 억제가 실패한 시행에서 무엇이 달라지는지가 핵심이다.</p></div>
+    </div>
+  </article>
+
+  <article class="crit">
+    <div class="crit-h"><span class="badge core">핵심 쟁점</span><h3>'보이는 얼굴'은 시간의 절반만 차지한다</h3></div>
+    <p>섬광 후 두 상태의 점유율은 거의 반반이다. 지각은 1초 내내 섬광 얼굴인데, IT는 두 얼굴에 같은 시간을 쓴다. 상태 1의 순간들을 '의식된 순간(conscious micro-epoch)'이라 부를 근거는 데이터에 없다. 오히려 IT 활동만으로는 무엇이 보이는지 정해지지 않는다는 결과에 가깝다.</p>
+    <p>영역 간 동기화가 약하다는 점도 같은 방향을 가리킨다. ML이 A를, AM이 B를 동시에 표현하는 순간이 있다면 그때 의식되는 것은 무엇인가. 또 얼굴 하나만 있는 프라이밍 중에도 약 25%의 구간이 다른 얼굴 상태로 분류된다(그림 2c 판독). 분류 자체의 오차 바닥이 작지 않다.</p>
+    <div class="crit-sub">
+      <div><h4>저자 쪽 근거</h4><p>저자들도 바로 이 점 때문에 하류의 '시간적 선택'이 필요하다고 결론 내린다. 다만 그렇다면 상태 1을 처음부터 '의식 상태'로 부르는 것은 결론을 앞질러 간 이름이다.</p></div>
+      <div><h4>판가름할 실험</h4><p>풀비나, 두정엽 같은 하류 후보 영역을 IT와 동시에 기록해, 이들이 상태 1 구간에만 선택적으로 반응하는지 확인.</p></div>
+    </div>
+  </article>
+
+  <article class="crit">
+    <div class="crit-h"><span class="badge core">핵심 쟁점</span><h3>적응과 '새로움'이 섞여 있다</h3></div>
+    <p>억제되는 얼굴은 같은 눈에 1–2초 먼저 떠 있었고, 보이는 얼굴은 방금 나타났다. 섬광 억제는 먼저 떠 있던 자극에 대한 적응과 새 자극의 출현 효과가 함께 만드는 현상으로 이해된다. 그런데 두 얼굴의 템플릿은 모두 '막 켜졌을 때'의 반응으로 만들었다.</p>
+    <p>그렇다면 보이는 얼굴 쪽 게인 21% 우위, 그리고 상태를 구분하는 서명은 의식이 아니라 '덜 적응된 새 자극'을 반영할 수 있다.</p>
+    <div class="crit-sub">
+      <div><h4>저자 쪽 근거</h4><p>적응만으로는 억제된 얼굴이 상태 2에서 거의 온전히 재구성되는 교대 구조 자체를 설명하기 어렵다. 이 비판은 교대 현상보다 '게인 차이가 의식의 표지'라는 해석을 겨냥한다.</p></div>
+      <div><h4>판가름할 실험</h4><p>논문에는 2초 프라이밍(10개 얼굴 실험)과 1초 프라이밍(1,500 얼굴 실험) 데이터가 모두 있다. 프라이밍이 길수록 게인 비대칭이 커지면 적응의 몫이 크다. 지각이 저절로 바뀌는 일반 양안 경쟁에서도 같은 분석이 필요하다.</p></div>
+    </div>
+  </article>
+
+  <article class="crit">
+    <div class="crit-h"><span class="badge core">핵심 쟁점</span><h3>두 자극이 있으면 원래 일어나는 일일 수 있다</h3></div>
+    <p>Groh 연구진은 원숭이에게 두 소리를 동시에 들려주면 하구(inferior colliculus) 뉴런이 각 소리 단독 반응 사이를 오가고, 이 요동이 뉴런 쌍 사이에 상관된다고 보고했다. 같은 논문에서 여러 시각 자극을 본 하측두피질 데이터도 비슷했다(<a href="https://doi.org/10.1038/s41467-018-05121-8">Caruso et al., 2018</a>). 이후 V1·V4에서도 두 물체가 있을 때 집단 수준에서 협응된 다중화를 보였다(<a href="https://elifesciences.org/articles/76452">Jun et al., 2022</a>). 이 논문의 참고문헌에는 둘 다 없다.</p>
+    <p>의식 경쟁이 없는 상황에서도 같은 교대가 일어난다면, 빠른 교대는 '여러 물체를 한 집단으로 표현하는 일반 방식'이고 의식과는 별개일 수 있다. 저자들이 고정 평균 모형을 '꽤 부자연스럽다'고 한 대목도 논쟁적이다. IT에서 두 물체에 대한 반응이 각 단독 반응의 평균에 가깝다는 정규화 결과는 잘 알려져 있다(Zoccolan et al., 2005).</p>
+    <div class="crit-sub">
+      <div><h4>저자 쪽 근거</h4><p>저자들도 토론에서 시간 다중화를 주의, 작업 기억, 해마의 일반 원리와 연결한다. 다만 그럴수록 '의식에 특이적'이라는 주장은 약해진다.</p></div>
+      <div><h4>판가름할 실험</h4><p>두 얼굴을 두 눈 모두에 나란히 보여 줘서 둘 다 보이게 하는 비경쟁 조건. 여기서도 같은 속도의 교대가 나오면 교대는 의식의 표지가 아니다.</p></div>
+    </div>
+  </article>
+
+  <article class="crit">
+    <div class="crit-h"><span class="badge minor">보조 쟁점</span><h3>'딱 두 상태'는 증명되지 않았다</h3></div>
+    <p>비교한 대안은 정적 단일 상태, 보이는 얼굴만, 고정 평균, 뉴런별 독립 교대였다. 빠진 대안이 있다. 집단 전체가 공유하는 혼합 비율이 연속적으로 흔들리는 모형이다. 2상태 모형이 정적 모형보다 낫다는 결과는 '공유된 요동이 있다'는 뜻이지 '정확히 두 개의 이산 상태'라는 뜻은 아니다.</p>
+    <p>저자들도 실제 전환은 순간적이지 않고 중간 패턴이 있다고 인정하며, 교차검증 재구성이 이상적인 2상태 시뮬레이션보다 낮은 이유로 이를 든다. 연속 혼합 모형이나 3상태 이상 모형과 교차검증 우도로 비교하면 가를 수 있다.</p>
+  </article>
+
+  <article class="crit">
+    <div class="crit-h"><span class="badge minor">보조 쟁점</span><h3>'15 Hz'는 리듬이 아니라 평균 전환율이다</h3></div>
+    <p>상태 신호의 자기상관은 진동 없이 지수적으로 줄어든다(그림 2d). 모형도 기억 없는 마르코프 과정이다. 초당 15번 바뀐다는 것은 평균 속도이지 주기적 리듬의 증거가 아니다. 그래서 토론에서 언급한 리듬성 주의 연구와의 연결은 아직 비유 수준이다. 체류 시간 분포(지수형이면 무작위 전환, 봉우리가 있으면 리듬)와 스펙트럼 분석으로 확인할 수 있다.</p>
+  </article>
+
+  <article class="crit">
+    <div class="crit-h"><span class="badge minor">보조 쟁점</span><h3>숫자의 크기를 따져 봐야 한다</h3></div>
+    <p>인상적인 얼굴 재구성(그림 2)은 순환 분석에서 나왔고, 앞에서 봤듯 상태가 없는 모형도 이 테스트는 통과한다. 교차검증을 하면 세션별 설명분산 중앙값이 상태 1의 보이는 얼굴 약 12%, 상태 2의 억제된 얼굴 약 5% 수준이다(확장 그림 4 판독, 세션당 뉴런 수백 개 기준). 초록의 '정확한 재구성'보다 훨씬 겸손한 수치다. 원숭이 M에서는 억제된 얼굴 표상이 약했다(확장 그림 3).</p>
+    <p>p = 8×10<sup>−133</sup> 같은 값은 세포-자극 쌍을 독립 표본으로 센 결과다. 실제 독립 단위는 원숭이 2마리, 19 세션이고 다중 유닛도 포함됐다. 적청 안경은 두 얼굴을 서로 다른 색으로 전달한다. 저자들은 색 성분을 제거해 확인했지만 두 눈 사이 누화(crosstalk)는 보고하지 않았다. 데이터와 코드는 출판 후 공개 예정이라 지금은 재분석할 수 없다.</p>
+  </article>
+</section>
+
+<section id="verdict" class="wrap">
+  <h2>주장별로 다시 보기</h2>
+  <div class="tbl stack">
+    <table>
+      <thead><tr><th>논문의 주장</th><th>판정</th><th>근거</th></tr></thead>
+      <tbody>
+        <tr><td>경쟁 중 평균 변조는 약하다</td><td><span class="pill good">● 탄탄</span></td><td>기존 결과 재현, 5,550 쌍</td></tr>
+        <tr><td>집단이 두 얼굴 표상을 수십 ms 단위로 오간다</td><td><span class="pill good">● 탄탄</span></td><td>뉴런 반분 교차검증, 대안 모형 4종 비교, On/Off 통제</td></tr>
+        <tr><td>같은 뉴런이 두 얼굴을 모두 부호화한다</td><td><span class="pill good">● 탄탄</span></td><td>게인 상관 r = 0.90, 튜닝 축 일치</td></tr>
+        <tr><td>억제된 얼굴도 정확히 재구성된다</td><td><span class="pill mid">◐ 중간</span></td><td>교차검증 수치가 낮고 원숭이 간 차이가 있다</td></tr>
+        <tr><td>전전두엽도 같은 구조다</td><td><span class="pill mid">◐ 중간</span></td><td>재구성 품질 낮음, 교차검증 해독 p = 0.03</td></tr>
+        <tr><td>교대는 의식과 억제의 교대다</td><td><span class="pill bad">○ 약함</span></td><td>보고 없음, 50:50 점유, 적응 혼입, 비경쟁 대조 없음</td></tr>
+        <tr><td>의식 접근에는 시간적 선택이 필요하다</td><td><span class="pill hyp">? 가설</span></td><td>이 데이터로 직접 검증되지 않았다</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="insight" class="wrap">
+  <h2>이 논문에서 얻을 수 있는 통찰</h2>
+  <p class="lead">해석에 빈틈이 있어도, 이 논문은 의식과 신경 부호를 생각하는 방식에 여러 가지를 남긴다.</p>
+
+  <article class="ins">
+    <h3>질문을 '어디'에서 '언제'로 옮긴다</h3>
+    <p>의식 연구의 큰 싸움은 장소 싸움이었다. 전두엽이냐 후방 피질이냐. 이 논문에서는 IT와 전전두엽 모두 평균으로는 순수한 의식 신호가 없고, 시간을 쪼개면 둘 다 있다. 장소를 기준으로 짠 예측은 둘 다 틀리거나 둘 다 맞는 셈이다.</p>
+    <div class="sowhat"><span>그래서?</span><p>다음 이론 검증은 '어느 영역이 켜지는가'보다 '언제, 어떤 순서로 무엇이 표현되는가'를 예측해야 한다. 대규모 대립 협업이 결정적 결론을 내지 못한 이유 중 하나가 시간 평균 분석일 수 있다.</p></div>
+  </article>
+
+  <article class="ins">
+    <h3>무의식은 희미한 잔상이 아니라 대기 중인 완전한 표상이다</h3>
+    <p>억제된 얼굴은 같은 뉴런, 같은 특징 코드로, 게인만 약 20% 낮게 표현된다. 의식과 무의식을 가르는 것이 표상의 질보다 '접근'과 '전달'에 가깝다는 뜻이다. 보지 못했다고 보고한 자극이 점화 효과나 정서 반응을 일으키는 현상도 이렇게 보면 자연스럽다.</p>
+    <div class="sowhat"><span>그래서?</span><p>"못 봤다"는 보고를 "처리되지 않았다"로 읽으면 안 된다. 고차 피질까지 고해상도로 올라간 정보는 보고되지 않아도 행동에 영향을 줄 수 있다.</p></div>
+  </article>
+
+  <article class="ins">
+    <h3>시분할 다중화에는 '헤더'가 필요하다</h3>
+    <p>전화망은 한 회선에 여러 통화를 시간 슬롯으로 번갈아 싣는다. 수신 측은 어느 슬롯이 어느 통화인지 알려 주는 동기 신호가 있어야 한다. Groh 연구진도 자신들의 다중화 결과를 이 '전화 트릭'에 비유했다. 뇌도 마찬가지다. 하류 영역이 IT를 그냥 평균해서 읽으면 두 얼굴이 섞인다(위 시뮬레이터). 지금 슬롯이 '의식용'인지 알려 주는 표지가 필요하고, 논문이 찾은 상태 서명(게인 상승, 66% 해독 가능)이 그 후보다.</p>
+    <div class="sowhat"><span>그래서?</span><p>검증 가능한 예측이 나온다. 선택을 담당할 후보 영역(풀비나, 두정엽)의 활동은 IT 상태 전환에 위상이 맞춰져 있어야 한다. 맞는다면 의식은 '무엇을 표현하는가'보다 '어느 순간을 읽는가'의 문제가 된다.</p></div>
+  </article>
+
+  <article class="ins">
+    <h3>50:50이라는 숫자가 말해 주는 분업</h3>
+    <p>지각은 거의 내내 섬광 얼굴인데 IT의 시간 점유율은 반반이다. IT는 두 해석을 고르게 번갈아 '제안'하고, 고르는 일은 다른 곳에서 일어난다는 그림과 맞는다. 지각을 확률 분포에서 표본을 뽑는 과정으로 보는 이론(예: Gershman, Vul &amp; Tenenbaum, 2012)은 점유율이 각 해석의 확률을 반영한다고 예측한다. 그렇다면 IT 수준의 확률은 두 눈의 증거만 반영해 반반이고, 지각의 확신은 하류에서 만들어진다고 볼 수 있다.</p>
+    <div class="sowhat"><span>그래서?</span><p>한쪽 눈의 대비를 올리는 실험이 두 가설을 가른다. 점유율이 움직이면 표본 추출(샘플링) 쪽, 게인만 움직이고 점유율은 그대로면 시간 게이팅 쪽이다.</p></div>
+  </article>
+
+  <article class="ins">
+    <h3>평균과 이중 사용에 대한 방법론 교훈</h3>
+    <p>두 가지는 이 논문을 넘어 일반적이다. 첫째, 반대 방향의 강한 신호 둘을 평균하면 '약한 효과'처럼 보인다. 시행 평균, 시간 평균, fMRI 복셀 평균 모두 같은 위험이 있다. 둘째, 같은 데이터로 잠재 상태를 정의하고 평가하면 노이즈만으로도 그럴듯한 결과가 나온다. 저자들이 만든 '대안 모형 × 테스트' 행렬은 다른 잠재 상태 연구에도 가져다 쓸 수 있는 검증 틀이다.</p>
+    <div class="sowhat"><span>그래서?</span><p>잠재 상태를 주장하는 논문을 읽을 때는 먼저 두 가지를 보자. 상태 추론과 평가에 서로 다른 뉴런이나 시행을 썼는가. 상태가 없는 대안 모형도 같은 분석을 통과하는가.</p></div>
+  </article>
+
+  <article class="ins">
+    <h3>인공 신경망 해석에도 같은 함정이 있다</h3>
+    <p>인공 신경망에서도 여러 특징이 같은 유닛에 겹쳐 표현된다(superposition). 이 논문은 뇌가 그런 겹침을 '방향'이 아니라 '시간'으로 푸는 사례를 보여 준다. 토큰이나 시점에 걸쳐 평균한 활성화로 특징을 찾으면 시간적으로 번갈아 나타나는 표상을 놓칠 수 있다. 또 내부에 경쟁 가설이 고해상도로 살아 있어도 출력은 하나라는 점은, 모델의 내부 상태와 출력을 구분해서 봐야 한다는 해석 가능성 연구의 전제와 닮았다.</p>
+    <div class="sowhat"><span>그래서?</span><p>내부 표상을 분석할 때는 평균보다 시점별 상태를 먼저 보고, 출력에 드러나지 않은 정보도 내부에 온전히 있을 수 있다고 가정하자.</p></div>
+  </article>
+</section>
+
+<section id="next" class="wrap">
+  <h2>다음에 해 볼 실험</h2>
+  <div class="tbl stack">
+    <table>
+      <thead><tr><th>질문</th><th>실험</th><th>결과 해석</th></tr></thead>
+      <tbody>
+        <tr><td>교대는 의식의 표지인가, 다중 자극의 일반 현상인가</td><td data-label="실험">두 얼굴이 모두 보이는 비경쟁 조건에서 같은 분석</td><td data-label="결과 해석">같은 교대가 나오면 의식과 무관한 다중화. 사라지면 경쟁·억제에 특이적</td></tr>
+        <tr><td>상태가 원숭이의 실제 지각과 연동되는가</td><td data-label="실험">시행별 지각 보고 또는 보고 없는 지각 지표</td><td data-label="결과 해석">억제가 실패한 시행에서 점유율이나 게인이 바뀌면 지각과 연결</td></tr>
+        <tr><td>게인 우위는 의식인가 적응인가</td><td data-label="실험">1초와 2초 프라이밍 비교, 동시 제시 양안 경쟁</td><td data-label="결과 해석">프라이밍이 길수록 비대칭이 커지면 적응의 기여</td></tr>
+        <tr><td>누가 '의식 슬롯'을 고르는가</td><td data-label="실험">풀비나·두정엽과 IT 동시 기록</td><td data-label="결과 해석">하류 활동이 상태 1에 위상 고정되면 시간 게이팅 가설 지지</td></tr>
+        <tr><td>교대는 리듬인가 무작위인가</td><td data-label="실험">체류 시간 분포와 스펙트럼 분석</td><td data-label="결과 해석">봉우리 있는 분포나 스펙트럼 피크면 진동, 지수 분포면 무작위 전환</td></tr>
+        <tr><td>교대는 인과적인가</td><td data-label="실험">상태에 맞춘 폐회로 미세 자극이나 광유전 교란</td><td data-label="결과 해석">상태 1 시점 교란만 지각을 바꾸면 인과적 증거</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="terms" class="wrap">
+  <h2>용어 정리</h2>
+  <dl class="terms">
+    <div><dt>양안 경쟁 <span>binocular rivalry</span></dt><dd>두 눈에 서로 다른 그림을 보여 줄 때 하나만 번갈아 보이는 현상.</dd></div>
+    <div><dt>양안 섬광 억제 <span>binocular flash suppression</span></dt><dd>한 눈에 그림을 먼저 보여 준 뒤 다른 눈에 새 그림을 띄우면 새 그림만 보이는 현상. 지각을 실험자가 조절할 수 있다.</dd></div>
+    <div><dt>의식의 신경 상관물 <span>NCC</span></dt><dd>특정 의식 경험과 함께 나타나는 최소한의 신경 활동.</dd></div>
+    <div><dt>얼굴 패치 ML·AM</dt><dd>원숭이 하측두피질에서 얼굴 선택 세포가 모인 영역. ML은 중간, AM은 더 앞쪽의 고차 영역.</dd></div>
+    <div><dt>PO·PVL</dt><dd>전전두엽의 얼굴 반응 영역. 안와전두 외측 고랑과 하궁상 함몰 부근.</dd></div>
+    <div><dt>Neuropixels</dt><dd>탐침 하나로 수백 개 뉴런을 동시에 기록하는 실리콘 전극.</dd></div>
+    <div><dt>템플릿과 로그우도비 <span>LLR</span></dt><dd>각 얼굴 단독 반응을 지문으로 삼아, 10 ms마다 어느 지문에 더 가까운지 확률로 비교한 값.</dd></div>
+    <div><dt>은닉 마르코프 모형 <span>HMM</span></dt><dd>관측 뒤에 숨은 상태가 일정 확률로 바뀐다고 보고 상태 순서를 추정하는 모형.</dd></div>
+    <div><dt>설명분산 <span>EV</span></dt><dd>재구성한 얼굴 특징이 실제 특징의 변동을 얼마나 설명하는지. 100%면 완벽, 0 이하면 평균값으로 찍는 것만 못하다.</dd></div>
+    <div><dt>변조 지수 <span>MI</span></dt><dd>(A 반응 − B 반응) ÷ (A 반응 + B 반응). 뉴런이 두 자극을 얼마나 구분하는지.</dd></div>
+    <div><dt>튜닝 게인</dt><dd>선호하는 얼굴 특징 축을 따라 반응이 얼마나 가파르게 커지는지(기울기).</dd></div>
+    <div><dt>이중 사용 <span>double dipping</span></dt><dd>같은 데이터로 상태를 정의하고 그 상태를 평가하는 순환 분석. 노이즈만으로도 그럴듯한 결과가 나온다.</dd></div>
+    <div><dt>On/Off 상태</dt><dd>피질 전체의 흥분성이 높은 시기와 낮은 시기가 번갈아 나타나는 현상.</dd></div>
+    <div><dt>시분할 다중화 <span>TDM</span></dt><dd>하나의 통로에 여러 신호를 시간 슬롯으로 번갈아 싣는 통신 방식.</dd></div>
+  </dl>
+</section>
+</main>
+
+<footer class="wrap">
+  <p><b>원문</b> Hesse J.K., Lanfranchi F.F., McGrory C., Shi Y., Engel T.A., Tsao D.Y. Rapid alternation of conscious and suppressed stimulus representations in the primate brain. bioRxiv (2026). <a href="https://doi.org/10.64898/2026.10.15.759299">doi.org/10.64898/2026.10.15.759299</a></p>
+  <p><b>반박 관점에서 인용한 연구</b> Caruso V.C. et al. (2018) Nature Communications 9:2715 · Jun N.Y. et al. (2022) eLife 11:e76452 · Zoccolan D., Cox D.D., DiCarlo J.J. (2005) Journal of Neuroscience · Gershman S.J., Vul E., Tenenbaum J.B. (2012) Neural Computation</p>
+  <p><b>읽는 법</b> 수치는 논문 본문과 그림 설명에서 가져왔다. "≈"와 "판독"으로 표시한 값은 그림에서 읽은 근사치다. 반박 관점과 통찰은 해설자의 해석이며, 원문은 동료 심사 전 프리프린트다.</p>
+  <p><b>여담</b> 저자들은 방법 절에서 확장 그림 5와 10의 계산 코드 일부를 Claude Code로 작성해 실행 시간을 줄였고, 모든 코드를 제1저자가 검토했다고 밝혔다.</p>
+  <p>2026년 10월 19일 작성</p>
+</footer>
+
+<script>
+(function(){
+  function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  function chain(r,n,p12,p21,start){var s=new Array(n),c=start;for(var i=0;i<n;i++){s[i]=c;var x=r();if(c===1&&x<p12)c=2;else if(c===2&&x<p21)c=1;}return s;}
+  function segs(arr){var out=[],st=0;for(var i=1;i<=arr.length;i++){if(i===arr.length||arr[i]!==arr[st]){out.push({s:arr[st],a:st,len:i-st});st=i;}}return out;}
+  function paint(el,list,offset,total,gap){
+    var f=document.createDocumentFragment();
+    list.forEach(function(g){var d=document.createElement('i');d.className='seg s'+g.s;d.style.left=((offset+g.a)/total*100)+'%';d.style.width='max(1px, calc('+(g.len/total*100)+'% - '+gap+'px))';f.appendChild(d);});
+    el.appendChild(f);
+  }
+  var P=5/60;
+
+  // hero: 1 s at 5 ms bins, drawn twice for a seamless loop
+  var hero=document.getElementById('heroFlick');
+  if(hero){var hs=segs(chain(rng(11),200,P,P,1));paint(hero,hs,0,400,2);paint(hero,hs,200,400,2);}
+
+  // schematic: priming biased toward face A (~75%), then even alternation after the flash
+  var sch=document.getElementById('schemIT');
+  if(sch){
+    var r=rng(5),pre=chain(r,200,5/30,5/90,2),post=chain(r,200,P,P,1);
+    var holder=document.createElement('div');holder.style.cssText='position:absolute;inset:0';
+    paint(holder,segs(pre),0,400,2);paint(holder,segs(post),200,400,2);
+    sch.insertBefore(holder,sch.firstChild);
+  }
+
+  // simulator
+  var N=200,seq=[],seed=7;
+  var segsEl=document.getElementById('simSegs'),win=document.getElementById('simWin'),strip=document.getElementById('simStrip');
+  var lenIn=document.getElementById('winLen'),posIn=document.getElementById('winPos'),gainIn=document.getElementById('gainOn');
+  var lenOut=document.getElementById('winLenOut'),posOut=document.getElementById('winPosOut');
+  var fracOut=document.getElementById('fracOut'),allOut=document.getElementById('allOut'),mark=document.getElementById('mixMark'),verdict=document.getElementById('verdict');
+  function occ(a){var k=0;for(var i=0;i<a.length;i++)if(a[i]===1)k++;return k/a.length;}
+  function makeSeq(){
+    for(var tries=0;tries<60;tries++){var s=chain(rng(seed),N,P,P,seed%2?1:2);if(Math.abs(occ(s)-0.5)<0.06){seq=s;return;}seed+=101;}
+    seq=chain(rng(seed),N,P,P,1);
+  }
+  function drawSeq(){segsEl.innerHTML='';paint(segsEl,segs(seq),0,N,2);allOut.textContent=Math.round(occ(seq)*100)+'%';}
+  function update(){
+    var W=+lenIn.value,c=+posIn.value;
+    var start=Math.min(Math.max(c-W/2,0),1000-W);
+    win.style.left=(start/10)+'%';win.style.width=(W/10)+'%';
+    lenOut.textContent=W+' ms';posOut.textContent=c+' ms';
+    var b0=Math.floor(start/5),b1=Math.max(b0+1,Math.ceil((start+W)/5)),k=0;
+    for(var i=b0;i<b1;i++)if(seq[i]===1)k++;
+    var f=k/(b1-b0),g=gainIn.checked?1.21:1,share=(g*f)/(g*f+(1-f));
+    fracOut.textContent=Math.round(f*100)+'%';
+    mark.style.left=(share*100)+'%';
+    var purity=Math.abs(share-0.5)*2,who=share>0.5?'보이는 얼굴':'억제된 얼굴',msg;
+    if(purity>=0.8)msg='거의 '+who+'만 담긴 순수한 표상이다. 이 순간만 잘라 읽으면 어느 얼굴인지 분명하다.';
+    else if(purity>=0.35)msg='두 얼굴이 섞이기 시작한다. '+who+' 쪽으로 기울어 있지만 다른 얼굴 정보도 함께 들어 있다.';
+    else msg='두 얼굴의 평균에 가깝다. 시간 평균 분석에서 본 \'약한 변조\'가 바로 이것이다.'+(gainIn.checked&&share>0.5?' 게인 우위 때문에 보이는 얼굴 쪽으로 살짝 기운다.':'');
+    verdict.textContent=msg;
+  }
+  if(strip){
+    makeSeq();drawSeq();update();
+    lenIn.addEventListener('input',update);posIn.addEventListener('input',update);gainIn.addEventListener('change',update);
+    document.getElementById('reseed').addEventListener('click',function(){seed=(Math.random()*1e9)|0;makeSeq();drawSeq();update();});
+    strip.addEventListener('click',function(e){var rc=strip.getBoundingClientRect();var x=(e.clientX-rc.left)/rc.width;posIn.value=Math.round(Math.min(Math.max(x,0),1)*200)*5;update();});
+  }
+
+  // tooltips
+  var tip=document.createElement('div');tip.className='tip';tip.hidden=true;document.body.appendChild(tip);
+  function place(x,y){var w=tip.offsetWidth,h=tip.offsetHeight,vw=window.innerWidth;var l=Math.min(Math.max(8,x-w/2),vw-w-8),t=y-h-12;if(t<8)t=y+16;tip.style.left=l+'px';tip.style.top=t+'px';}
+  function show(el,x,y){tip.textContent=el.getAttribute('data-tip');tip.hidden=false;place(x,y);}
+  document.addEventListener('pointerover',function(e){var el=e.target.closest&&e.target.closest('[data-tip]');if(el)show(el,e.clientX,e.clientY);});
+  document.addEventListener('pointermove',function(e){if(!tip.hidden&&e.target.closest&&e.target.closest('[data-tip]'))place(e.clientX,e.clientY);});
+  document.addEventListener('pointerout',function(e){var el=e.target.closest&&e.target.closest('[data-tip]');if(el&&!(e.relatedTarget&&el.contains(e.relatedTarget)))tip.hidden=true;});
+  document.addEventListener('focusin',function(e){var el=e.target.closest&&e.target.closest('[data-tip]');if(el){var rc=el.getBoundingClientRect();show(el,rc.left+rc.width/2,rc.top);}});
+  document.addEventListener('focusout',function(){tip.hidden=true;});
+  window.addEventListener('scroll',function(){tip.hidden=true;},{passive:true});
+
+  // section highlight in the chip nav
+  var toc=document.getElementById('toc'),links={};
+  Array.prototype.forEach.call(toc.querySelectorAll('a'),function(a){links[a.getAttribute('href').slice(1)]=a;});
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){var a=links[en.target.id];if(!a)return;Object.keys(links).forEach(function(k){links[k].classList.remove('on');});a.classList.add('on');toc.scrollTo({left:a.offsetLeft-toc.clientWidth/2+a.offsetWidth/2,behavior:'smooth'});}});},{rootMargin:'-40% 0px -55% 0px'});
+    Object.keys(links).forEach(function(k){var s=document.getElementById(k);if(s)io.observe(s);});
+  }
+})();
+</script>
+
+</body>
+</html>
